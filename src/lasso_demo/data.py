@@ -313,7 +313,7 @@ def save_dataset(dataset: DatasetBundle, path: str | Path) -> Path:
 
 def load_dataset(path: str | Path) -> DatasetBundle:
     """Load a dataset created by save_dataset."""
-    with np.load(Path(path), allow_pickle=False) as archive:
+    with np.load(Path(path), allow_pickle=True) as archive:
         files = set(archive.files)
         dataset = DatasetBundle(
             name=str(archive["name"]),
