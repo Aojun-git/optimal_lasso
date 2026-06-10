@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LASSO问题的多种优化算法对比展示方案</title>
+<style>
+  :root{
+    --bg:#f6f8fb;
+    --card:#ffffff;
+    --ink:#1f2937;
+    --muted:#64748b;
+    --main:#2563eb;
+    --main2:#0f766e;
+    --line:#dbe3ef;
+    --soft:#eef6ff;
+    --warn:#fff7ed;
+    --good:#ecfdf5;
+    --bad:#fef2f2;
+    --code:#0f172a;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",Arial,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    line-height:1.65;
+  }
+  .page{max-width:1180px;margin:0 auto;padding:34px 22px 72px}
+  .hero{
+    background:linear-gradient(135deg,#1d4ed8,#0f766e);
+    color:white;
+    border-radius:24px;
+    padding:34px 38px;
+    box-shadow:0 18px 45px rgba(15,23,42,.18);
+  }
+  .hero h1{margin:0 0 10px;font-size:32px;line-height:1.25}
+  .hero p{margin:7px 0;color:#e5eefc;font-size:16px}
+  .badge{
+    display:inline-block;
+    padding:4px 10px;
+    border-radius:999px;
+    background:rgba(255,255,255,.17);
+    color:#fff;
+    margin-right:8px;
+    font-size:13px;
+  }
+  .grid{display:grid;gap:18px}
+  .grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+  @media (max-width:850px){.grid.two,.grid.three{grid-template-columns:1fr}.hero h1{font-size:26px}}
+  section{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:24px 26px;
+    margin-top:22px;
+    box-shadow:0 8px 24px rgba(15,23,42,.05);
+  }
+  h2{margin:0 0 16px;font-size:23px;color:#0f172a;border-left:5px solid var(--main);padding-left:12px}
+  h3{margin:22px 0 10px;font-size:18px;color:#0f172a}
+  h4{margin:16px 0 8px;font-size:16px;color:#334155}
+  p{margin:9px 0}
+  ul,ol{margin:8px 0 8px 20px;padding:0}
+  li{margin:5px 0}
+  table{
+    width:100%;
+    border-collapse:collapse;
+    overflow:hidden;
+    border-radius:14px;
+    margin:12px 0;
+    font-size:14px;
+  }
+  th,td{border:1px solid var(--line);padding:10px 12px;vertical-align:top}
+  th{background:#eff6ff;color:#1e3a8a;text-align:left}
+  tr:nth-child(even) td{background:#fbfdff}
+  .note{
+    background:var(--soft);
+    border-left:5px solid var(--main);
+    padding:13px 15px;
+    border-radius:12px;
+    color:#334155;
+    margin:12px 0;
+  }
+  .warning{
+    background:var(--warn);
+    border-left:5px solid #f97316;
+    padding:13px 15px;
+    border-radius:12px;
+  }
+  .good{
+    background:var(--good);
+    border-left:5px solid #10b981;
+    padding:13px 15px;
+    border-radius:12px;
+  }
+  .bad{
+    background:var(--bad);
+    border-left:5px solid #ef4444;
+    padding:13px 15px;
+    border-radius:12px;
+  }
+  .formula{
+    background:#f8fafc;
+    border:1px dashed #cbd5e1;
+    border-radius:14px;
+    padding:14px 16px;
+    margin:12px 0;
+    font-family:"Times New Roman","Cambria Math",serif;
+    font-size:18px;
+    overflow-x:auto;
+  }
+  pre{
+    background:var(--code);
+    color:#e2e8f0;
+    padding:16px;
+    border-radius:14px;
+    overflow:auto;
+    font-size:13px;
+    line-height:1.55;
+  }
+  code{font-family:Consolas,Menlo,Monaco,monospace}
+  .pill{
+    display:inline-block;
+    padding:3px 9px;
+    border-radius:999px;
+    background:#e0f2fe;
+    color:#075985;
+    font-size:12px;
+    margin:2px 4px 2px 0;
+  }
+  .tag-green{background:#dcfce7;color:#166534}
+  .tag-orange{background:#ffedd5;color:#9a3412}
+  .tag-purple{background:#f3e8ff;color:#6b21a8}
+  .tag-red{background:#fee2e2;color:#991b1b}
+  .timeline{
+    display:grid;
+    grid-template-columns:120px 1fr;
+    gap:12px;
+    align-items:start;
+  }
+  .timebox{
+    font-weight:700;
+    color:#1e40af;
+    background:#eff6ff;
+    border-radius:12px;
+    padding:9px 10px;
+    text-align:center;
+  }
+  .caption{color:var(--muted);font-size:13px;margin-top:4px}
+  .small{font-size:13px;color:var(--muted)}
+  .center{text-align:center}
+  .checklist li{list-style:"✓  ";padding-left:4px}
+  .toc a{color:#1d4ed8;text-decoration:none}
+  .toc a:hover{text-decoration:underline}
+  .flow{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+    margin:12px 0;
+  }
+  .node{
+    padding:10px 13px;
+    border:1px solid #bfdbfe;
+    background:#eff6ff;
+    border-radius:14px;
+    font-weight:600;
+  }
+  .arrow{color:#64748b;font-weight:700}
+
+  .priority{
+    display:inline-block;
+    min-width:64px;
+    text-align:center;
+    padding:3px 9px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:700;
+  }
+  .p-main{background:#dcfce7;color:#166534}
+  .p-real{background:#e0f2fe;color:#075985}
+  .p-extra{background:#f3e8ff;color:#6b21a8}
+  .p-risk{background:#fee2e2;color:#991b1b}
+
+</style>
+
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['\\(', '\\)'], ['$', '$']],
+      displayMath: [['\\[', '\\]']],
+      processEscapes: true
+    },
+    svg: {
+      fontCache: 'global'
+    }
+  };
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+</head>
+<body>
+<div class="page">
+  <div class="hero">
+    <div>
+      <span class="badge">最优化课程展示</span>
+      <span class="badge">第6/7/8章综合</span>
+      <span class="badge">Python手写迭代</span>
+    </div>
+    <h1>LASSO 回归问题的多种优化算法对比：从非光滑建模到复合优化求解</h1>
+    <p>推荐题目：<b>“LASSO 问题的多算法实现与收敛行为对比”</b></p>
+    <p>核心目标：用同一个 LASSO 模型串联第 6 章梯度/次梯度思想、第 7 章增广拉格朗日/ADMM 思想、第 8 章近端梯度、FISTA、坐标下降等复合优化算法；用手写循环实现算法，并用图表展示收敛速度、稀疏恢复效果、参数敏感性和实际预测表现。</p>
+  </div>
+
+  <section id="overview">
+    <h2>1. 选题定位与展示主线</h2>
+    <div class="note">
+      <b>一句话主线：</b>LASSO 是“光滑二次损失 + 非光滑 L1 正则”的典型复合优化问题。它既能体现建模意义，也能自然比较不同最优化算法的思想差异：直接次梯度、近端梯度、Nesterov 加速、坐标下降、ADMM。
+    </div>
+    <div class="formula">
+      \[
+      \min_x F(x)=\frac{1}{2}\|Ax-b\|_2^2+\mu\|x\|_1
+      \]
+    </div>
+    <table>
+      <tr>
+        <th>课程章节对应</th>
+        <th>在展示中的作用</th>
+        <th>建议讲解深度</th>
+      </tr>
+      <tr>
+        <td>第6章：无约束优化算法<br>梯度下降、次梯度思想</td>
+        <td>作为基线：说明 L1 在 0 点不可微，直接用次梯度法可以做，但收敛慢、震荡明显。</td>
+        <td>中等：重点讲“为什么朴素方法不够好”。</td>
+      </tr>
+      <tr>
+        <td>第7章：约束优化算法<br>增广拉格朗日思想</td>
+        <td>通过变量分裂 \(x=z\) 得到 ADMM，展示“把难问题拆成两个容易子问题”的思路。</td>
+        <td>中等：不做复杂证明，强调原始残差/对偶残差。</td>
+      </tr>
+      <tr>
+        <td>第8章：复合优化算法<br>ISTA/FISTA、坐标下降、ADMM</td>
+        <td>展示主体：LASSO 最自然属于复合优化，近端算子软阈值是核心。</td>
+        <td>重点：公式、伪代码、收敛曲线和实验对比都围绕这一章展开。</td>
+      </tr>
+    </table>
+    <div class="good">
+      <b>推荐展示结论：</b>FISTA 通常在目标函数下降上快于 ISTA；坐标下降在中小规模、特征数不太大时实现简单且效果稳定；ADMM 在变量分裂视角下解释性强，适合展示约束优化思想；次梯度法最容易实现，但作为 LASSO 主求解器通常不是最优选择。
+    </div>
+  </section>
+
+  <section id="problem">
+    <h2>2. 问题建模：为什么 LASSO 值得讲</h2>
+    <h3>2.1 从最小二乘到稀疏回归</h3>
+    <p>普通最小二乘只追求拟合误差小：</p>
+    <div class="formula">\[
+      \min_x \frac{1}{2}\|Ax-b\|_2^2
+    \]</div>
+    <p>当特征很多、样本较少、或者希望模型具有可解释性时，我们更希望解向量 \(x\) 中只有少数非零元素。LASSO 加入 L1 正则：</p>
+    <div class="formula">\[
+      \min_x \frac{1}{2}\|Ax-b\|_2^2+\mu\|x\|_1
+    \]</div>
+    <p>其中 \(A\in \mathbb{R}^{m\times n}\) 是样本-特征矩阵，\(b\in \mathbb{R}^{m}\) 是观测值，\(x\in \mathbb{R}^n\) 是待估计参数，\(\mu>0\) 控制稀疏程度。</p>
+
+    <h3>2.2 需要回答的三个问题</h3>
+    <div class="grid three">
+      <div class="note">
+        <b>建模问题</b><br>
+        L1 为什么能带来稀疏性？\(\mu\) 越大，解为什么越稀疏？
+      </div>
+      <div class="note">
+        <b>算法问题</b><br>
+        L1 不可微时，为什么不能直接照搬普通梯度下降？
+      </div>
+      <div class="note">
+        <b>实验问题</b><br>
+        不同算法在目标函数、恢复误差、运行时间、稀疏度上各有什么差异？
+      </div>
+    </div>
+
+    <h3>2.3 展示中建议保留的直观图</h3>
+    <table>
+      <tr><th>图片</th><th>含义</th><th>制作方式</th></tr>
+      <tr>
+        <td>L1/L2 几何示意图</td>
+        <td>L1 球有尖角，更容易与约束线在坐标轴附近相交，因此更容易产生稀疏解。</td>
+        <td>自己用 matplotlib 画二维菱形、圆和直线。</td>
+      </tr>
+      <tr>
+        <td>真实稀疏 \(x^\star\) vs 恢复 \(\hat{x}\)</td>
+        <td>展示 LASSO 对稀疏信号恢复的效果。</td>
+        <td>stem plot 或 bar plot。</td>
+      </tr>
+      <tr>
+        <td>\(\mu\) 路径图</td>
+        <td>展示不同正则化强度下，非零系数数量和预测误差如何变化。</td>
+        <td>x 轴为 \(\mu\)，y 轴为非零个数/测试 MSE。</td>
+      </tr>
+    </table>
+  </section>
+
+  <section id="algorithm">
+    <h2>3. 算法模块设计</h2>
+    <p>建议实现 5 个算法，其中 4 个作为正式对比，1 个作为“为什么需要更好算法”的基线。所有算法都用 Python + NumPy 手写 for/while 循环，不调用 sklearn 的 Lasso、scipy.optimize.minimize、cvxpy 等求解器。</p>
+
+    <h3>3.1 公共工具函数</h3>
+    <table>
+      <tr><th>函数</th><th>作用</th><th>备注</th></tr>
+      <tr>
+        <td><code>objective(A,b,x,mu)</code></td>
+        <td>计算 \(F(x)=0.5\|Ax-b\|^2+\mu\|x\|_1\)</td>
+        <td>所有算法共用，便于画收敛曲线。</td>
+      </tr>
+      <tr>
+        <td><code>grad_smooth(A,b,x)</code></td>
+        <td>计算光滑项梯度 \(A^T(Ax-b)\)</td>
+        <td>ISTA/FISTA/次梯度法使用。</td>
+      </tr>
+      <tr>
+        <td><code>soft_threshold(v,lam)</code></td>
+        <td>软阈值算子 \(S_\lambda(v)=\mathrm{sign}(v)\max(|v|-\lambda,0)\)</td>
+        <td>LASSO 的核心近端算子。</td>
+      </tr>
+      <tr>
+        <td><code>metrics(...)</code></td>
+        <td>计算目标值、恢复误差、非零个数、测试误差、运行时间</td>
+        <td>统一生成表格。</td>
+      </tr>
+    </table>
+
+    <h3>3.2 算法一：次梯度法 Subgradient Descent（基线）</h3>
+    <p>把 L1 项看成不可微项，用次梯度近似处理：</p>
+    <div class="formula">\[
+      g_k=A^T(Ax_k-b)+\mu\cdot s_k,\quad s_{k,i}\in \partial |x_{k,i}|
+    \]</div>
+    <pre><code>初始化 x = 0
+for k in range(max_iter):
+    grad = A.T @ (A @ x - b)
+    subgrad_l1 = sign(x)              # x_i=0 时可取 0，作为简单实现
+    step = alpha0 / sqrt(k + 1)       # 衰减步长更稳
+    x = x - step * (grad + mu * subgrad_l1)
+    记录 objective、误差、稀疏度</code></pre>
+    <p><b>展示意义：</b>它最贴近第 6 章次梯度思想，代码非常简单，但通常目标下降慢、稀疏性不够干净，可以作为反衬。</p>
+
+    <h3>3.3 算法二：ISTA / 近似点梯度法</h3>
+    <p>将 LASSO 写为 \(f(x)+g(x)\)，其中 \(f(x)=0.5\|Ax-b\|^2\) 可微，\(g(x)=\mu\|x\|_1\) 不可微但有简单近端算子。</p>
+    <div class="formula">\[
+      x_{k+1}=S_{\mu/L}\left(x_k-\frac{1}{L}A^T(Ax_k-b)\right)
+    \]</div>
+    <pre><code>估计 L = 最大特征值(A.T @ A) 或使用 power iteration
+初始化 x = 0
+for k in range(max_iter):
+    y = x - (1/L) * A.T @ (A @ x - b)
+    x = soft_threshold(y, mu/L)
+    记录 objective、误差、稀疏度</code></pre>
+    <p><b>展示意义：</b>这是 LASSO 的主算法之一，体现“梯度步 + 近端修正”的复合优化思想。</p>
+
+    <h3>3.4 算法三：FISTA / Nesterov 加速近端梯度</h3>
+    <p>FISTA 在 ISTA 基础上加入动量点 \(y_k\)，通常能显著加快目标函数下降。</p>
+    <div class="formula">\[
+      x_{k+1}=S_{\mu/L}\left(y_k-\frac{1}{L}A^T(Ay_k-b)\right),\quad
+      t_{k+1}=\frac{1+\sqrt{1+4t_k^2}}{2}
+    \]</div>
+    <div class="formula">\[
+      y_{k+1}=x_{k+1}+\frac{t_k-1}{t_{k+1}}(x_{k+1}-x_k)
+    \]</div>
+    <pre><code>初始化 x = 0, y = x, t = 1
+for k in range(max_iter):
+    x_old = x.copy()
+    x = soft_threshold(y - (1/L) * A.T @ (A @ y - b), mu/L)
+    t_new = (1 + sqrt(1 + 4*t*t)) / 2
+    y = x + ((t - 1) / t_new) * (x - x_old)
+    t = t_new
+    记录 objective、误差、稀疏度</code></pre>
+    <p><b>展示意义：</b>对应第 8 章 Nesterov 加速/FISTA，可通过半对数收敛曲线直观看出“加速”的作用。</p>
+
+    <h3>3.5 算法四：坐标下降法 Coordinate Descent</h3>
+    <p>逐个更新 \(x_j\)，固定其他坐标。令残差 \(r=b-Ax\)，第 \(j\) 个坐标更新可写为：</p>
+    <div class="formula">\[
+      \rho_j=a_j^T(r+a_jx_j),\quad
+      x_j \leftarrow \frac{S_{\mu}(\rho_j)}{\|a_j\|_2^2}
+    \]</div>
+    <pre><code>初始化 x = 0, r = b - A @ x
+for epoch in range(max_epoch):
+    for j in range(n):
+        r = r + A[:, j] * x[j]              # 加回旧贡献
+        rho = A[:, j].T @ r
+        x_new_j = soft_threshold(rho, mu) / (norm(A[:, j])**2)
+        r = r - A[:, j] * x_new_j          # 扣除新贡献
+        x[j] = x_new_j
+    记录 objective、误差、稀疏度</code></pre>
+    <p><b>展示意义：</b>对应第 8 章分块坐标下降法。它不需要全局矩阵求逆，也非常适合展示“逐坐标解析更新”。</p>
+
+    <h3>3.6 算法五：ADMM / 交替方向乘子法</h3>
+    <p>做变量分裂：令 \(x=z\)，把二次损失和 L1 正则拆开：</p>
+    <div class="formula">\[
+      \min_{x,z}\frac{1}{2}\|Ax-b\|_2^2+\mu\|z\|_1,\quad s.t.\ x-z=0
+    \]</div>
+    <p>ADMM 的 scaled form 更新为：</p>
+    <div class="formula">\[
+      x^{k+1}=(A^TA+\rho I)^{-1}(A^Tb+\rho(z^k-u^k))
+    \]</div>
+    <div class="formula">\[
+      z^{k+1}=S_{\mu/\rho}(x^{k+1}+u^k),\quad
+      u^{k+1}=u^k+x^{k+1}-z^{k+1}
+    \]</div>
+    <pre><code>预计算 M = A.T @ A + rho * I
+初始化 x,z,u = 0
+for k in range(max_iter):
+    # 不直接求 inverse；可用 np.linalg.solve 解线性方程
+    x = solve(M, A.T @ b + rho * (z - u))
+    z_old = z.copy()
+    z = soft_threshold(x + u, mu/rho)
+    u = u + x - z
+    primal_res = norm(x - z)
+    dual_res = rho * norm(z - z_old)
+    记录 objective、残差、误差、稀疏度</code></pre>
+    <p><b>展示意义：</b>对应第 7/8 章的增广拉格朗日与交替方向乘子法，适合展示“约束化/分裂化”的思想。</p>
+    <div class="warning">
+      <b>实现注意：</b>ADMM 中可以使用 <code>np.linalg.solve</code> 解线性方程，但不要用 <code>np.linalg.inv</code> 显式求逆；这不算依赖求解包，而是基础线性代数操作。若想更“手写”，可额外实现一个简单 Cholesky 或共轭梯度版本作为附录，不建议作为主任务，工作量会明显增加。
+    </div>
+  </section>
+
+
+  <section id="experiment">
+    <h2>4. 实验设计：数据集、指标、图表</h2>
+
+    <div class="note">
+      <b>这一版把数据集明确下来：</b>主实验不要只做真实数据，也不要只做合成数据。建议采用“三层数据集”：
+      <b>合成稀疏恢复</b>负责展示算法是否真的恢复稀疏解；
+      <b>Diabetes 小型真实回归</b>负责展示快速可复现的真实数据效果；
+      <b>LIBSVM E2006-tfidf</b>负责展示大规模稀疏回归场景。组内提到的 Boston Housing 可以保留为备选说明，但不建议作为主实验。
+    </div>
+
+    <h3>4.1 数据集总表</h3>
+    <table>
+      <tr>
+        <th>优先级</th>
+        <th>数据集</th>
+        <th>来源/构造方式</th>
+        <th>推荐规模</th>
+        <th>主要用途</th>
+        <th>需要画的图</th>
+      </tr>
+      <tr>
+        <td><span class="priority p-main">主实验</span></td>
+        <td>合成稀疏回归数据 Synthetic Sparse LASSO</td>
+        <td>
+          参考教材稀疏优化例子的思路：生成高斯矩阵 \(A\)，生成稀疏真实向量 \(x^\star\)，令
+          \[
+          b=Ax^\star+\epsilon.
+          \]
+          其中 \(\epsilon\) 是可控噪声。
+        </td>
+        <td>
+          小规模：\(m=128,n=256,k\approx 0.1n\)<br>
+          展示规模：\(m=100,n=300,k=20\)<br>
+          压力测试：\(m=200,n=1000,k=50\)
+        </td>
+        <td>
+          这是最重要的数据集，因为有真实 \(x^\star\)，可以比较恢复误差、支持集 F1、非零元素数量。
+        </td>
+        <td>
+          真实系数 vs 恢复系数；目标函数收敛曲线；恢复误差曲线；不同 \(\mu\) 的稀疏度变化。
+        </td>
+      </tr>
+      <tr>
+        <td><span class="priority p-real">真实小数据</span></td>
+        <td>Diabetes 回归数据</td>
+        <td>
+          使用 <code>sklearn.datasets.load_diabetes</code> 加载。它是小型回归数据，适合快速跑通所有算法。
+        </td>
+        <td>
+          442 个样本，10 个特征。训练/测试按 8:2 或 7:3 划分。
+        </td>
+        <td>
+          展示 LASSO 在真实数据上的预测误差、系数路径、特征筛选效果。
+        </td>
+        <td>
+          测试 MSE vs \(\mu\)；非零特征数 vs \(\mu\)；不同算法最终结果表。
+        </td>
+      </tr>
+      <tr>
+        <td><span class="priority p-extra">拓展实验</span></td>
+        <td>LIBSVM E2006-tfidf 回归数据</td>
+        <td>
+          组内讨论里提到的真实回归数据。它来自 LIBSVM regression 数据列表，属于高维稀疏文本回归数据。
+        </td>
+        <td>
+          不建议一开始全量跑。建议先取前 1000–3000 个样本，并选择出现频率最高或方差最高的 2000–10000 个特征。
+        </td>
+        <td>
+          展示 LASSO 在“高维稀疏特征”上的实际意义；也可以检验坐标下降和 ADMM 在大规模数据上的运行压力。
+        </td>
+        <td>
+          目标函数 vs CPU 时间；测试误差表；非零特征数表。若时间紧，可以只放一页拓展结果。
+        </td>
+      </tr>
+      <tr>
+        <td><span class="priority p-risk">备选/不主推</span></td>
+        <td>Boston Housing</td>
+        <td>
+          组内讨论中提到过 UCI Boston Housing，但不建议作为正式主数据集。
+        </td>
+        <td>
+          若必须保留，只作为“历史小型回归数据”放在附录，不作为主实验结论来源。
+        </td>
+        <td>
+          可以替换为 Diabetes 或 California Housing。对于课程展示，Diabetes 更轻量，E2006-tfidf 更贴合高维稀疏。
+        </td>
+        <td>
+          不建议投入主图制作。
+        </td>
+      </tr>
+    </table>
+
+    <h3>4.2 三层实验路线</h3>
+    <table>
+      <tr>
+        <th>实验层次</th>
+        <th>实验内容</th>
+        <th>回答的问题</th>
+        <th>建议放在 PPT 的位置</th>
+      </tr>
+      <tr>
+        <td>Level 1：合成数据主实验</td>
+        <td>
+          固定 \(m,n,k,\mu\)，比较 Subgradient、ISTA、FISTA、Coordinate Descent、ADMM。
+        </td>
+        <td>
+          哪个算法收敛更快？哪个算法更能恢复真实稀疏解？算法得到的非零位置是否准确？
+        </td>
+        <td>结果页 1–2 页，作为最核心图表。</td>
+      </tr>
+      <tr>
+        <td>Level 2：参数敏感性</td>
+        <td>
+          改变 \(\mu\)、噪声强度 \(\sigma\)、矩阵相关性 corr、ADMM 的 \(\rho\)。
+        </td>
+        <td>
+          正则化参数如何影响“拟合误差—稀疏性”的权衡？病态矩阵会不会让算法变慢？
+        </td>
+        <td>结果页 1 页，展示模型理解。</td>
+      </tr>
+      <tr>
+        <td>Level 3：真实数据验证</td>
+        <td>
+          Diabetes 必做；E2006-tfidf 作为拓展。如果 E2006 跑不动，就取样本/特征子集。
+        </td>
+        <td>
+          合成数据上的结论在真实回归问题上是否仍然成立？LASSO 是否能产生稀疏可解释的系数？
+        </td>
+        <td>结果页 1 页，展示可应用性。</td>
+      </tr>
+    </table>
+
+    <h3>4.3 数据生成与加载伪代码</h3>
+    <h4>合成稀疏数据</h4>
+    <pre><code>def make_synthetic_lasso(m=128, n=256, k=25, noise=0.01, corr=0.0, seed=0):
+    rng = np.random.default_rng(seed)
+
+    # 1. 生成设计矩阵 A
+    A = rng.normal(size=(m, n)) / np.sqrt(m)
+
+    # 可选：构造相关特征，模拟病态问题
+    if corr > 0:
+        for j in range(1, n):
+            A[:, j] = corr * A[:, j-1] + np.sqrt(1 - corr**2) * A[:, j]
+
+    # 2. 生成 k-稀疏真实向量 x_star
+    x_star = np.zeros(n)
+    support = rng.choice(n, size=k, replace=False)
+    x_star[support] = rng.normal(size=k)
+
+    # 3. 生成观测 b
+    b = A @ x_star + noise * rng.normal(size=m)
+
+    # 4. 标准化，避免不同特征尺度影响算法比较
+    A = standardize_columns(A)
+    b = b - b.mean()
+    return A, b, x_star, support</code></pre>
+
+    <h4>Diabetes 数据</h4>
+    <pre><code>from sklearn.datasets import load_diabetes
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+
+X, y = load_diabetes(return_X_y=True)
+X = StandardScaler().fit_transform(X)
+y = y - y.mean()
+
+A_train, A_test, b_train, b_test = train_test_split(
+    X, y, test_size=0.2, random_state=0
+)</code></pre>
+
+    <h4>LIBSVM E2006-tfidf 数据</h4>
+    <pre><code>from sklearn.datasets import load_svmlight_file
+from sklearn.preprocessing import StandardScaler
+
+# 下载 LIBSVM regression 页面中的 E2006-tfidf 训练/测试文件后读取
+X_sparse, y = load_svmlight_file("E2006.train")  # 文件名按实际下载为准
+
+# 为了手写 NumPy 算法更容易展示，先做子集实验
+X_sparse = X_sparse[:3000, :]
+y = y[:3000]
+
+# 选择出现频率最高的前 p 个特征，避免直接全量高维导致运行过慢
+p = 5000
+feature_freq = np.asarray((X_sparse != 0).sum(axis=0)).ravel()
+top_idx = np.argsort(feature_freq)[-p:]
+X = X_sparse[:, top_idx].toarray()
+
+X = StandardScaler().fit_transform(X)
+y = y - y.mean()</code></pre>
+
+    <div class="warning">
+      <b>E2006-tfidf 的实现取舍：</b>如果你们当前算法都写成 dense NumPy 矩阵乘法，E2006 全量数据会比较吃内存和时间。课程展示不需要强行全量，建议先做“子样本 + 特征筛选”的可复现实验；如果后续有精力，再把 ISTA/FISTA 改成支持 sparse matvec。
+    </div>
+
+    <h3>4.4 统一评价指标</h3>
+    <table>
+      <tr><th>指标</th><th>公式/定义</th><th>适用数据</th><th>解释</th></tr>
+      <tr>
+        <td>目标函数值</td>
+        <td>\(F(x_k)\)</td>
+        <td>全部数据</td>
+        <td>主要收敛曲线。</td>
+      </tr>
+      <tr>
+        <td>相对目标差</td>
+        <td>\((F(x_k)-F_{\min})/|F_{\min}|\)</td>
+        <td>全部数据</td>
+        <td>不同算法横向比较更公平。\(F_{\min}\) 可取所有算法最终最小值近似。</td>
+      </tr>
+      <tr>
+        <td>恢复误差</td>
+        <td>\(\|x_k-x^\star\|_2/\|x^\star\|_2\)</td>
+        <td>合成数据</td>
+        <td>衡量是否恢复真实稀疏信号。</td>
+      </tr>
+      <tr>
+        <td>稀疏度</td>
+        <td>\(\#\{i:|x_i|>10^{-6}\}\)</td>
+        <td>全部数据</td>
+        <td>看不同算法是否得到真正稀疏解。</td>
+      </tr>
+      <tr>
+        <td>支持集 Precision / Recall / F1</td>
+        <td>预测非零位置 vs 真实非零位置</td>
+        <td>合成数据</td>
+        <td>衡量特征选择效果。</td>
+      </tr>
+      <tr>
+        <td>运行时间</td>
+        <td>CPU time</td>
+        <td>全部数据</td>
+        <td>展示算法复杂度差异。</td>
+      </tr>
+      <tr>
+        <td>测试 MSE</td>
+        <td>\(\|A_{\text{test}}x-b_{\text{test}}\|^2/m_{\text{test}}\)</td>
+        <td>真实数据</td>
+        <td>观察泛化性能。</td>
+      </tr>
+      <tr>
+        <td>ADMM 残差</td>
+        <td>\(\|x-z\|_2,\rho\|z^k-z^{k-1}\|_2\)</td>
+        <td>ADMM</td>
+        <td>展示约束满足过程。</td>
+      </tr>
+    </table>
+
+    <h3>4.5 必须产出的图片清单</h3>
+    <table>
+      <tr><th>编号</th><th>图名</th><th>数据集</th><th>横轴/纵轴</th><th>想说明什么</th></tr>
+      <tr>
+        <td>Fig.1</td>
+        <td>L1 与 L2 几何稀疏性示意图</td>
+        <td>示意图</td>
+        <td>二维坐标</td>
+        <td>L1 为什么偏向坐标轴，带来稀疏解。</td>
+      </tr>
+      <tr>
+        <td>Fig.2</td>
+        <td>真实稀疏系数 vs LASSO 恢复系数</td>
+        <td>合成数据</td>
+        <td>特征编号 / 系数值</td>
+        <td>LASSO 能恢复主要非零位置。</td>
+      </tr>
+      <tr>
+        <td>Fig.3</td>
+        <td>目标函数值随迭代次数变化</td>
+        <td>合成数据</td>
+        <td>iteration / \(F(x_k)\)</td>
+        <td>FISTA 通常快于 ISTA，次梯度慢。</td>
+      </tr>
+      <tr>
+        <td>Fig.4</td>
+        <td>相对目标差半对数曲线</td>
+        <td>合成数据</td>
+        <td>iteration / log relative gap</td>
+        <td>更清楚看收敛速度差异。</td>
+      </tr>
+      <tr>
+        <td>Fig.5</td>
+        <td>目标函数值 vs CPU 时间</td>
+        <td>合成 + E2006 子集</td>
+        <td>time / \(F(x)\)</td>
+        <td>避免只看迭代数导致不公平。</td>
+      </tr>
+      <tr>
+        <td>Fig.6</td>
+        <td>\(\mu\) 对稀疏度和测试误差的影响</td>
+        <td>Diabetes</td>
+        <td>\(\mu\) / nonzero count & test MSE</td>
+        <td>展示正则化参数的建模意义。</td>
+      </tr>
+      <tr>
+        <td>Fig.7</td>
+        <td>ADMM 原始残差与对偶残差</td>
+        <td>合成数据</td>
+        <td>iteration / residual</td>
+        <td>体现约束优化算法的收敛检查。</td>
+      </tr>
+      <tr>
+        <td>Fig.8</td>
+        <td>E2006-tfidf 子集结果</td>
+        <td>E2006-tfidf 子集</td>
+        <td>time / test MSE / nonzero count</td>
+        <td>展示高维稀疏真实数据上的算法表现。</td>
+      </tr>
+    </table>
+
+    <h3>4.6 结果表模板</h3>
+    <table>
+      <tr>
+        <th>数据集</th><th>算法</th><th>最终目标值</th><th>相对误差</th><th>非零个数</th><th>支持集 F1</th><th>测试 MSE</th><th>CPU 时间</th><th>备注</th>
+      </tr>
+      <tr>
+        <td>合成</td><td>Subgradient</td><td>待填</td><td>待填</td><td>待填</td><td>待填</td><td>-</td><td>待填</td><td>简单但慢，稀疏性可能不干净。</td>
+      </tr>
+      <tr>
+        <td>合成</td><td>ISTA</td><td>待填</td><td>待填</td><td>待填</td><td>待填</td><td>-</td><td>待填</td><td>稳定，基准复合优化算法。</td>
+      </tr>
+      <tr>
+        <td>合成</td><td>FISTA</td><td>待填</td><td>待填</td><td>待填</td><td>待填</td><td>-</td><td>待填</td><td>通常迭代效率最高。</td>
+      </tr>
+      <tr>
+        <td>合成</td><td>Coordinate Descent</td><td>待填</td><td>待填</td><td>待填</td><td>待填</td><td>-</td><td>待填</td><td>中小规模很强，逐坐标更新直观。</td>
+      </tr>
+      <tr>
+        <td>合成</td><td>ADMM</td><td>待填</td><td>待填</td><td>待填</td><td>待填</td><td>-</td><td>待填</td><td>变量分裂清晰，对参数 \(\rho\) 敏感。</td>
+      </tr>
+      <tr>
+        <td>Diabetes</td><td>Best of 5 solvers</td><td>待填</td><td>-</td><td>待填</td><td>-</td><td>待填</td><td>待填</td><td>用于真实小数据展示。</td>
+      </tr>
+      <tr>
+        <td>E2006 子集</td><td>FISTA / CD / ADMM</td><td>待填</td><td>-</td><td>待填</td><td>-</td><td>待填</td><td>待填</td><td>用于拓展实验，不强求全量。</td>
+      </tr>
+    </table>
+  </section>
+
+
+  <section id="implementation">
+    <h2>5. 代码工程计划</h2>
+    <h3>5.1 项目目录建议</h3>
+    <pre><code>lasso_optimization_demo/
+├── data/
+│   ├── synthetic_cache.npz
+│   ├── diabetes_cache.npz
+│   ├── e2006_subset_cache.npz
+│   └── raw_libsvm/
+├── src/
+│   ├── utils.py              # objective, soft_threshold, metrics
+│   ├── data_gen.py           # synthetic data & preprocessing
+│   ├── alg_subgradient.py
+│   ├── alg_ista_fista.py
+│   ├── alg_cd.py
+│   ├── alg_admm.py
+│   └── plot_results.py
+├── experiments/
+│   ├── run_synthetic.py
+│   ├── run_mu_path.py
+│   └── run_realdata.py
+├── outputs/
+│   ├── figures/
+│   ├── tables/
+│   └── logs/
+├── report/
+│   └── report.md / report.docx
+└── slides/
+    └── lasso_presentation.pptx</code></pre>
+
+    <h3>5.2 编程原则</h3>
+    <ul class="checklist">
+      <li>算法核心必须是 <code>for</code> 或 <code>while</code> 循环，不调用黑箱优化求解器。</li>
+      <li>允许使用 NumPy 做矩阵乘法、范数、线性方程求解；允许用 Matplotlib 画图。</li>
+      <li>可以用 sklearn 只负责加载数据、标准化、切分训练测试；不能调用 <code>sklearn.linear_model.Lasso</code> 作为主结果。</li>
+      <li>每个算法输出统一格式：<code>{x, history}</code>，其中 <code>history</code> 保存 objective、time、sparsity、error。</li>
+      <li>所有随机实验固定 seed，保证汇报时结果可复现。</li>
+    </ul>
+
+    <h3>5.3 统一实验流程</h3>
+    <div class="flow">
+      <div class="node">生成/加载数据</div>
+      <div class="arrow">→</div>
+      <div class="node">标准化 A,b</div>
+      <div class="arrow">→</div>
+      <div class="node">选择 μ</div>
+      <div class="arrow">→</div>
+      <div class="node">运行 5 个算法</div>
+      <div class="arrow">→</div>
+      <div class="node">记录 history</div>
+      <div class="arrow">→</div>
+      <div class="node">画图与制表</div>
+    </div>
+    <pre><code>for dataset in datasets:
+    A_train, b_train, A_test, b_test, x_star = load_or_generate(dataset)
+    for mu in mu_list:
+        for solver in [subgrad, ista, fista, cd, admm]:
+            result = solver(A_train, b_train, mu, config)
+            evaluate(result.x, A_test, b_test, x_star)
+            save_history(result.history)
+plot_all_curves()
+export_summary_tables()</code></pre>
+  </section>
+
+  <section id="division">
+    <h2>6. 六人分工方案</h2>
+    <table>
+      <tr>
+        <th>角色</th>
+        <th>人数</th>
+        <th>主要任务</th>
+        <th>具体交付物</th>
+        <th>验收标准</th>
+      </tr>
+      <tr>
+        <td>展示人 / 统筹</td>
+        <td>1</td>
+        <td>负责最终讲解、串联逻辑、统一口径，协调 PPT 与代码结果。</td>
+        <td>8–10 分钟讲稿；答辩问题清单；最终版 PPT 演示。</td>
+        <td>能清楚解释 LASSO、软阈值、算法差异、实验结论。</td>
+      </tr>
+      <tr>
+        <td>报告负责人</td>
+        <td>1</td>
+        <td>撰写课程报告，整理模型、算法公式、实验设置和结论。</td>
+        <td>报告初稿、终稿；公式说明；参考章节整理。</td>
+        <td>报告结构完整，能对应课程第 6/7/8 章内容。</td>
+      </tr>
+      <tr>
+        <td>PPT 负责人</td>
+        <td>1</td>
+        <td>制作展示 PPT，统一图表风格，把复杂公式转为可讲解内容。</td>
+        <td>12–16 页 PPT；图表排版；流程图。</td>
+        <td>PPT 不堆字，每页有一个核心观点。</td>
+      </tr>
+      <tr>
+        <td>项目模块 A：数据与评估</td>
+        <td>1</td>
+        <td>实现数据生成、真实数据预处理、评价指标、结果表导出。</td>
+        <td><code>data_gen.py</code>, <code>utils.py</code>, 表格 CSV。</td>
+        <td>不同算法可以直接调用同一套数据和指标。</td>
+      </tr>
+      <tr>
+        <td>项目模块 B：ISTA/FISTA/次梯度</td>
+        <td>1</td>
+        <td>实现次梯度法、ISTA、FISTA，并完成对应收敛曲线。</td>
+        <td><code>alg_subgradient.py</code>, <code>alg_ista_fista.py</code>。</td>
+        <td>曲线可复现；FISTA 与 ISTA 差异明显。</td>
+      </tr>
+      <tr>
+        <td>项目模块 C：坐标下降/ADMM/绘图整合</td>
+        <td>1</td>
+        <td>实现坐标下降和 ADMM，整合所有算法输出，画最终对比图。</td>
+        <td><code>alg_cd.py</code>, <code>alg_admm.py</code>, <code>plot_results.py</code>。</td>
+        <td>能生成最终 8 类图片和总表。</td>
+      </tr>
+    </table>
+
+    <div class="note">
+      <b>协作建议：</b>先由项目模块 A 统一数据格式和 history 格式，否则后期很容易出现不同算法无法放在同一张图里的问题。PPT 和报告不要等代码完全结束才开始，可以先用“待填图位”搭好结构。
+    </div>
+  </section>
+
+  <section id="slides">
+    <h2>7. PPT 结构建议（12–16 页）</h2>
+    <table>
+      <tr><th>页码</th><th>标题</th><th>核心内容</th><th>建议展示</th></tr>
+      <tr><td>1</td><td>题目与成员分工</td><td>LASSO 多算法对比</td><td>标题 + 分工表简版</td></tr>
+      <tr><td>2</td><td>问题背景</td><td>高维回归、特征选择、稀疏性需求</td><td>普通回归 vs 稀疏回归示意</td></tr>
+      <tr><td>3</td><td>LASSO 模型</td><td>二次损失 + L1 正则</td><td>核心公式 + 符号解释</td></tr>
+      <tr><td>4</td><td>L1 为什么产生稀疏性</td><td>L1/L2 几何差异</td><td>菱形与圆形示意图</td></tr>
+      <tr><td>5</td><td>算法总览</td><td>Subgradient、ISTA、FISTA、CD、ADMM</td><td>算法分类表</td></tr>
+      <tr><td>6</td><td>软阈值算子</td><td>LASSO 求解的关键</td><td>软阈值函数曲线</td></tr>
+      <tr><td>7</td><td>ISTA 与 FISTA</td><td>近端梯度与加速</td><td>伪代码 + 更新公式</td></tr>
+      <tr><td>8</td><td>坐标下降法</td><td>逐坐标解析更新</td><td>坐标更新流程图</td></tr>
+      <tr><td>9</td><td>ADMM</td><td>变量分裂与残差</td><td>x/z/u 三步流程图</td></tr>
+      <tr><td>10</td><td>实验设置</td><td>数据、参数、指标</td><td>实验配置表</td></tr>
+      <tr><td>11</td><td>收敛曲线结果</td><td>目标值 vs 迭代/时间</td><td>Fig.3 + Fig.5</td></tr>
+      <tr><td>12</td><td>稀疏恢复结果</td><td>真实系数 vs 恢复系数</td><td>Fig.2</td></tr>
+      <tr><td>13</td><td>参数敏感性</td><td>\(\mu\)、\(\rho\)、步长影响</td><td>Fig.6 + ADMM 残差图</td></tr>
+      <tr><td>14</td><td>结果表与算法对比</td><td>速度、精度、稀疏度综合比较</td><td>总表 + 柱状图</td></tr>
+      <tr><td>15</td><td>结论</td><td>不同算法适用场景</td><td>takeaway 三点</td></tr>
+      <tr><td>16</td><td>Q&A</td><td>预设问题</td><td>简洁结束页</td></tr>
+    </table>
+  </section>
+
+  <section id="results">
+    <h2>8. 最终希望得到的结论框架</h2>
+    <div class="grid two">
+      <div class="good">
+        <h3>可以预期的结论</h3>
+        <ul>
+          <li>相比直接次梯度法，近端方法更适合 LASSO 这种“光滑 + 非光滑”的复合结构。</li>
+          <li>FISTA 在目标函数下降速度上通常优于 ISTA，但可能存在轻微震荡。</li>
+          <li>坐标下降法实现直观，在特征规模中等时表现稳定。</li>
+          <li>ADMM 的变量分裂解释性强，可以通过原始残差和对偶残差观察约束满足过程。</li>
+          <li>\(\mu\) 越大，解越稀疏；但过大可能导致欠拟合，测试误差上升。</li>
+        </ul>
+      </div>
+      <div class="warning">
+        <h3>需要避免的风险</h3>
+        <ul>
+          <li>不要只画迭代次数曲线，还要画 CPU 时间曲线，否则不同算法单步成本不可比。</li>
+          <li>不要只做真实数据，因为没有真实 \(x^\star\)，无法展示“恢复误差”。</li>
+          <li>不要把代码写成直接调用现成 LASSO 求解器，否则不符合课程展示要求。</li>
+          <li>不要过度讲复杂证明，展示重点应放在“算法思想 + 手写实现 + 实验现象”。</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="schedule">
+    <h2>9. 时间安排</h2>
+    <div class="timeline">
+      <div class="timebox">第 1 天</div>
+      <div>确定统一模型、数据格式、评价指标；项目模块 A 完成 synthetic 数据生成和 objective/soft-threshold 工具函数。</div>
+      <div class="timebox">第 2 天</div>
+      <div>实现 Subgradient、ISTA、FISTA；先跑通一组合成数据，导出初版收敛曲线。</div>
+      <div class="timebox">第 3 天</div>
+      <div>实现 Coordinate Descent、ADMM；完成与前 3 个算法的统一 history 格式。</div>
+      <div class="timebox">第 4 天</div>
+      <div>跑完整实验：不同 \(\mu\)、不同矩阵相关性、真实数据；导出所有图片和总表。</div>
+      <div class="timebox">第 5 天</div>
+      <div>报告负责人完成报告初稿；PPT 负责人完成 12–16 页初版；展示人开始写讲稿。</div>
+      <div class="timebox">第 6 天</div>
+      <div>统一修改图表、检查公式、压缩讲解时间，准备答辩问题。</div>
+      <div class="timebox">第 7 天</div>
+      <div>全组彩排，最终修订 PPT、报告和代码 README。</div>
+    </div>
+  </section>
+
+  <section id="qa">
+    <h2>10. 可能被问到的问题与回答口径</h2>
+    <table>
+      <tr><th>问题</th><th>建议回答</th></tr>
+      <tr>
+        <td>为什么 L1 能产生稀疏性，而 L2 不行？</td>
+        <td>L1 球有尖角，优化解更容易落在坐标轴附近；从算法上看，软阈值会把小系数直接压到 0，而 L2 通常只是连续缩小系数。</td>
+      </tr>
+      <tr>
+        <td>为什么不用普通梯度下降？</td>
+        <td>L1 在 0 点不可微，普通梯度不适用。可以用次梯度，但效率较低；近端梯度能利用 L1 的特殊结构，更新后直接得到稀疏解。</td>
+      </tr>
+      <tr>
+        <td>FISTA 为什么比 ISTA 快？</td>
+        <td>FISTA 在近端梯度基础上加入 Nesterov 动量，利用历史方向构造外推点，因此目标下降通常更快。</td>
+      </tr>
+      <tr>
+        <td>ADMM 和 ISTA 的本质区别是什么？</td>
+        <td>ISTA 直接在原变量上做“梯度步 + 近端步”；ADMM 先引入 \(x=z\)，把二次项和 L1 项拆开，交替优化两个子问题，并用乘子更新约束一致性。</td>
+      </tr>
+      <tr>
+        <td>如何选择 \(\mu\)？</td>
+        <td>从建模角度，\(\mu\) 控制拟合误差与稀疏性之间的权衡；实验中可以画 \(\mu\) path，用验证集误差和非零个数共同选择。</td>
+      </tr>
+    </table>
+  </section>
+
+  <section id="deliverables">
+    <h2>11. 最终交付物清单</h2>
+    <ul class="checklist">
+      <li>Python 项目代码：5 个算法均为手写迭代实现。</li>
+      <li>实验图片：至少 6 张，推荐 8 张。</li>
+      <li>结果表：合成数据总表、真实数据总表、参数敏感性表。</li>
+      <li>PPT：12–16 页，突出图表和算法流程。</li>
+      <li>课程报告：包含问题建模、算法推导、实验设置、结果分析和总结。</li>
+      <li>README：说明如何运行代码、复现实验、生成图片。</li>
+    </ul>
+    <div class="note">
+      <b>数据集交付建议：</b>最终代码至少保证合成数据和 Diabetes 一键运行；E2006-tfidf 允许以“子集实验”形式交付，并在 README 里说明下载、抽样、特征筛选和缓存步骤。
+    </div>
+    <div class="note">
+      <b>最终题目建议：</b>《LASSO 回归问题的多种优化算法对比：ISTA、FISTA、坐标下降与 ADMM 的手写实现》
+    </div>
+  </section>
+</div>
+</body>
+</html>

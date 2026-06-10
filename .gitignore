@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+
+data/raw/e2006/*
+!data/raw/e2006/README.md
+
+outputs/figures/*
+!outputs/figures/.gitkeep
+outputs/logs/*
+!outputs/logs/.gitkeep
+outputs/tables/*
+!outputs/tables/results_template.csv
