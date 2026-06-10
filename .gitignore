@@ -7,9 +7,6 @@ __pycache__/
 data/raw/e2006/*
 !data/raw/e2006/README.md
 
-outputs/figures/*
-!outputs/figures/.gitkeep
+# outputs figures are now tracked for experiment results
 outputs/logs/*
 !outputs/logs/.gitkeep
-outputs/tables/*
-!outputs/tables/results_template.csv
