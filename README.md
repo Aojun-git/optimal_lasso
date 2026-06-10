@@ -67,8 +67,46 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 python -m pip install -e .
-python -m experiments.prepare_data
 ```
+
+### 使用 Git LFS 拉取 E2006 数据
+
+处理后的 `e2006_subset.npz` 约 145 MiB，通过 Git LFS 存储。首次使用仓库前需要
+安装并初始化 Git LFS。
+
+Windows 可以安装 [Git for Windows](https://gitforwindows.org/)，其中通常已经
+包含 Git LFS。确认安装：
+
+```powershell
+git lfs version
+```
+
+首次克隆推荐使用：
+
+```powershell
+git lfs install
+git clone https://github.com/Aojun-git/optimal_lasso.git
+cd optimal_lasso
+git lfs pull
+```
+
+如果仓库已经克隆，但 `e2006_subset.npz` 只有几行 LFS 指针文本，进入项目目录后
+执行：
+
+```powershell
+git lfs install
+git lfs pull
+```
+
+验证大文件是否已经拉取：
+
+```powershell
+git lfs ls-files
+Get-Item data\processed\e2006\e2006_subset.npz | Select-Object Name,Length
+```
+
+正常文件大小约为 152 MB；如果只有约 130 字节，说明仍是 LFS 指针，需要重新执行
+`git lfs pull`。
 
 已生成的数据位于：
 
@@ -99,6 +137,12 @@ data/processed/e2006/e2006_subset.npz
 
 ```powershell
 python -m experiments.prepare_data --prepare-e2006
+```
+
+如需重新生成所有非 E2006 数据，可运行：
+
+```powershell
+python -m experiments.prepare_data
 ```
 
 ## 实现 Solver
